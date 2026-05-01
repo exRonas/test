@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "<string>", line 10, in <module>
+  File "C:\Users\n2005\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1251.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2015' in position 8915: character maps to <undefined>
