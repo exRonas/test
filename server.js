@@ -34,5 +34,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Quiz server running on http://localhost:${PORT}`);
+  console.log(`Quiz server running on http://0.0.0.0:${PORT}`);
 });
