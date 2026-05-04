@@ -285,6 +285,42 @@ body {
 
 .ans-icon { flex-shrink: 0; font-weight: bold; min-width: 16px; }
 
+/* Result options */
+.res-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.res-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13.5px;
+  line-height: 1.4;
+  background: #f5f5f5;
+  color: #3c4043;
+}
+
+.res-option.correct {
+  background: #e6f4ea;
+  color: #137333;
+}
+
+.res-option.wrong {
+  background: #fce8e6;
+  color: #c5221f;
+}
+
+.res-opt-icon {
+  flex-shrink: 0;
+  font-weight: bold;
+  min-width: 16px;
+}
+
 @media (max-width: 600px) {
   #menu-screen { padding: 12px 10px 40px; }
   .menu-banner { padding: 24px 18px 18px; }
@@ -428,7 +464,8 @@ function submitQuiz() {
       question: q.question,
       correct,
       userAns: ui !== null ? varList[qi][ui].text : null,
-      rightAns: varList[qi].find(v => v.correct).text
+      rightAns: varList[qi].find(v => v.correct).text,
+      allVariants: varList[qi]
     };
   });
 
@@ -460,13 +497,27 @@ function showResults(data, ok, total) {
     card.appendChild(qn);
     card.appendChild(qt);
 
-    if (d.correct) {
-      row(card, 'ok-ans', '✓', d.userAns);
-    } else {
-      if (d.userAns) row(card, 'bad-ans', '✗', 'Ваш ответ: ' + d.userAns);
-      else row(card, 'bad-ans', '—', 'Вопрос пропущен');
-      row(card, 'correct-hint', '✓', 'Правильно: ' + d.rightAns);
-    }
+    // Показываем все варианты ответов
+    const opts = document.createElement('div');
+    opts.className = 'res-options';
+    d.allVariants.forEach(v => {
+      const opt = document.createElement('div');
+      let cls = 'res-option';
+      let icon = '○';
+
+      if (v.text === d.rightAns) {
+        cls += ' correct';
+        icon = '✓';
+      } else if (v.text === d.userAns) {
+        cls += ' wrong';
+        icon = '✗';
+      }
+
+      opt.className = cls;
+      opt.innerHTML = '<span class="res-opt-icon">' + icon + '</span><span>' + v.text + '</span>';
+      opts.appendChild(opt);
+    });
+    card.appendChild(opts);
 
     list.appendChild(card);
   });
@@ -474,13 +525,6 @@ function showResults(data, ok, total) {
   show('result-screen');
   window.scrollTo(0, 0);
   setTimeout(() => { document.getElementById('score-fill').style.width = pct + '%'; }, 80);
-}
-
-function row(parent, cls, icon, text) {
-  const d = document.createElement('div');
-  d.className = 'ans-row ' + cls;
-  d.innerHTML = '<span class="ans-icon">' + icon + '</span><span>' + text + '</span>';
-  parent.appendChild(d);
 }
 
 function retake() { startQuiz(curTest, curSub); }
