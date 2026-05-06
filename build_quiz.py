@@ -321,6 +321,109 @@ body {
   min-width: 16px;
 }
 
+/* ===== ANSWERS ===== */
+#answers-screen { display: none; }
+
+.answers-top {
+  background: #5e35b1;
+  color: white;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+}
+
+.answers-top button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 50%;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.answers-top button:hover { background: rgba(255,255,255,0.18); }
+
+.search-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: rgba(255,255,255,0.15);
+  border-radius: 20px;
+  padding: 0 12px;
+  height: 36px;
+}
+
+.search-box input {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  padding: 0;
+}
+
+.search-box input::placeholder { color: rgba(255,255,255,0.6); }
+
+.search-box input::-webkit-input-placeholder { color: rgba(255,255,255,0.6); }
+
+.answers-container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 14px 12px 40px;
+}
+
+.answer-card {
+  background: white;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border-left: 4px solid #5e35b1;
+}
+
+.answer-test {
+  font-size: 11px;
+  color: #5e35b1;
+  font-weight: 600;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.answer-num {
+  font-size: 12px;
+  color: #80868b;
+  margin-bottom: 6px;
+}
+
+.answer-q {
+  font-size: 14px;
+  line-height: 1.45;
+  color: #202124;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.answer-a {
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: #137333;
+  background: #e6f4ea;
+  padding: 8px 10px;
+  border-radius: 6px;
+}
+
 @media (max-width: 600px) {
   #menu-screen { padding: 12px 10px 40px; }
   .menu-banner { padding: 24px 18px 18px; }
@@ -339,13 +442,27 @@ const T1 = Q1DATA;
 const T2 = Q2DATA;
 
 const TESTS = [
-  { name: 'Инклюзивное образование', questions: T1 },
-  { name: 'Основы НИД и академическое письмо', questions: T2 }
+  { name: 'Инклюзивное образование', questions: T1, color: '#5e35b1' },
+  { name: 'Основы НИД и академическое письмо', questions: T2, color: '#7e57c2' }
 ];
 
-let curTest, curSub, qList, varList, answers;
+let curTest, curSub, qList, varList, answers, allAnswersData = [];
 
 function buildMenu() {
+  // Построить все ответы для справочника
+  allAnswersData = [];
+  TESTS.forEach((t, ti) => {
+    t.questions.forEach((q, qi) => {
+      allAnswersData.push({
+        testIdx: ti,
+        testName: t.name,
+        qNum: qi + 1,
+        question: q.question,
+        answer: q.variants[0]
+      });
+    });
+  });
+
   TESTS.forEach((t, ti) => {
     const row = document.getElementById('row-' + ti);
     const n = t.questions.length;
@@ -530,8 +647,38 @@ function showResults(data, ok, total) {
 function retake() { startQuiz(curTest, curSub); }
 function goMenu() { show('menu-screen'); window.scrollTo(0, 0); }
 
+function showAnswers() {
+  const list = document.getElementById('answers-list');
+  list.innerHTML = '';
+  allAnswersData.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'answer-card';
+    card.innerHTML = `
+      <div class="answer-test">${item.testName}</div>
+      <div class="answer-num">Вопрос ${item.qNum}</div>
+      <div class="answer-q">${item.question}</div>
+      <div class="answer-a">✓ ${item.answer}</div>
+    `;
+    list.appendChild(card);
+  });
+  document.getElementById('search-input').value = '';
+  show('answers-screen');
+  window.scrollTo(0, 0);
+}
+
+function searchAnswers() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const list = document.getElementById('answers-list');
+  const cards = list.querySelectorAll('.answer-card');
+
+  cards.forEach(card => {
+    const text = card.textContent.toLowerCase();
+    card.style.display = text.includes(q) ? 'block' : 'none';
+  });
+}
+
 function show(id) {
-  ['menu-screen', 'quiz-screen', 'result-screen'].forEach(s => {
+  ['menu-screen', 'quiz-screen', 'result-screen', 'answers-screen'].forEach(s => {
     document.getElementById(s).style.display = s === id ? 'block' : 'none';
   });
 }
@@ -554,6 +701,9 @@ HTML = f"""<!DOCTYPE html>
   <div class="menu-banner">
     <h1>Тесты</h1>
     <p>Выберите тест и раздел &nbsp;·&nbsp; Вопросы перемешиваются при каждом запуске</p>
+  </div>
+  <div style="max-width: 700px; margin: 0 auto; padding: 0 16px 12px;">
+    <button onclick="showAnswers()" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%); color: white; border: none; border-radius: 10px; font-size: 15px; font-family: inherit; font-weight: 500; cursor: pointer; box-shadow: 0 2px 6px rgba(26,115,232,0.4); transition: all 0.15s;">📖 Справочник ответов (поиск)</button>
   </div>
   <div class="menu-card">
     <div class="test-section">
@@ -609,6 +759,17 @@ HTML = f"""<!DOCTYPE html>
     </div>
   </div>
   <div class="res-list" id="res-list"></div>
+</div>
+
+<!-- ANSWERS -->
+<div id="answers-screen">
+  <div class="answers-top">
+    <button onclick="goMenu()" title="Назад">&#8592;</button>
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="Поиск по вопросам..." oninput="searchAnswers()">
+    </div>
+  </div>
+  <div class="answers-container" id="answers-list"></div>
 </div>
 
 <script>{JS}</script>
